@@ -13,7 +13,6 @@ export default function Home() {
           </SignInButton>
           <SignUpButton>
             <Button variant="outline">Sign Up</Button>
-
           </SignUpButton>
         </Show>
         <Show when="signed-in">
