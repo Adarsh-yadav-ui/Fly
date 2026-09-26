@@ -1,22 +1,23 @@
 import { SignIn } from "@clerk/nextjs";
-import { AudioLines, BrainCircuit, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { AudioLines, Bot, Mic, ShieldCheck, Video } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const features = [
   {
-    icon: AudioLines,
-    title: "Realtime context",
-    description: "Keeps up as ideas unfold.",
+    icon: Mic,
+    title: "Realtime voice",
+    description: "Streaming both ways, mid-sentence if needed.",
   },
   {
-    icon: BrainCircuit,
-    title: "Custom expertise",
-    description: "Built around your knowledge.",
+    icon: Bot,
+    title: "Custom or ready-made",
+    description: "Your prompt, or an agent that already knows the job.",
   },
   {
-    icon: Zap,
-    title: "Always ready",
-    description: "Prepared for every meeting.",
+    icon: Video,
+    title: "In the call already",
+    description: "Joins your Zoom or Meet and just listens.",
   },
 ] as const;
 
@@ -26,15 +27,23 @@ function Brand({ className = "" }: { className?: string }) {
   return (
     <Link
       href="/"
-      className={`inline-flex items-center gap-2.5 ${className}`}
+      className={`inline-flex items-center ${className}`}
       aria-label="Fly home"
     >
-      <span className="flex size-9 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-950/30">
-        <AudioLines className="size-5" aria-hidden="true" />
-      </span>
-      <span className="text-xl font-semibold tracking-[-0.04em]">
-        fly<span className="text-violet-500">.</span>
-      </span>
+      <Image
+        src="/logo_dark.svg"
+        alt="Fly"
+        width={199}
+        height={76}
+        className="h-8 w-auto dark:hidden"
+      />
+      <Image
+        src="/logo_light.svg"
+        alt="Fly"
+        width={183}
+        height={74}
+        className="hidden h-8 w-auto dark:block"
+      />
     </Link>
   );
 }
@@ -45,11 +54,11 @@ function LiveConversation() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200">
-            <Sparkles className="size-5" aria-hidden="true" />
+            <AudioLines className="size-5" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-sm font-medium text-white">Fly AI</p>
-            <p className="text-xs text-white/50">Product strategy</p>
+            <p className="text-sm font-medium text-white">Your custom agent</p>
+            <p className="text-xs text-white/50">Custom prompt · Gemini Realtime</p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
@@ -60,18 +69,18 @@ function LiveConversation() {
 
       <div className="mt-4 space-y-2.5">
         <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-white/10 px-3.5 py-2.5 text-sm leading-relaxed text-white/80">
-          What is the biggest risk we should discuss today?
+          Give me the three risks we should raise today.
         </div>
         <div className="ml-auto max-w-[88%] rounded-2xl rounded-tr-md bg-violet-500 px-3.5 py-2.5 text-sm leading-relaxed text-white">
-          I&apos;ll connect the open questions to customer impact and the launch timeline.
+          Adoption curve, support load, and the pricing change. Which one do you want first?
         </div>
       </div>
 
       <div className="mt-4 flex items-center gap-3 text-xs text-white/55">
         <span className="flex size-7 items-center justify-center rounded-full bg-violet-500/20 text-violet-200">
-          <Sparkles className="size-3.5" aria-hidden="true" />
+          <Mic className="size-3.5" aria-hidden="true" />
         </span>
-        <span>Fly AI is listening</span>
+        <span>Listening &mdash; ready to answer</span>
         <div className="ml-auto flex h-6 items-center gap-1" aria-hidden="true">
           {waveform.map((height, index) => (
             <span
@@ -100,13 +109,13 @@ export default function SignInPage() {
             <div className="my-auto py-4">
               <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1.5 text-xs font-medium text-violet-200">
                 <span className="size-1.5 animate-pulse rounded-full bg-violet-300" />
-                Your custom AI is in the room
+                Your AI agent is one question away
               </div>
               <h1 className="mt-6 max-w-xl text-4xl leading-[1.05] font-semibold tracking-[-0.045em] text-balance xl:text-6xl">
-                Meet an AI that keeps up with your best thinking.
+                Walk into the meeting and start talking.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-white/60 xl:text-lg">
-                Fly joins your meetings, understands the context, and responds in real time so your team can stay focused on the conversation.
+                Fly speaks with you live&mdash;streaming a realtime voice model into your Zoom or Meet so the conversation never waits on a transcript. Use your own prompt, or start from a ready-made AI agent.
               </p>
             </div>
 
@@ -142,10 +151,10 @@ export default function SignInPage() {
                   Welcome back
                 </p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-balance">
-                  Your next great conversation starts here.
+                  Your agent is ready to talk.
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Sign in and bring your custom AI back into the room.
+                  Sign in and jump straight back into a live voice conversation.
                 </p>
               </div>
 

@@ -1,22 +1,23 @@
 import { SignUp } from "@clerk/nextjs";
-import { AudioLines, BrainCircuit, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { AudioLines, Bot, Mic, ShieldCheck, Video } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const features = [
   {
-    icon: BrainCircuit,
-    title: "Made for you",
-    description: "Shaped around your expertise.",
+    icon: Mic,
+    title: "Realtime voice",
+    description: "Streams both ways, so it answers while you talk.",
   },
   {
-    icon: AudioLines,
-    title: "Instant answers",
-    description: "Help while the moment is live.",
+    icon: Bot,
+    title: "Your prompt or ours",
+    description: "Write your own, or start from a ready-made agent.",
   },
   {
-    icon: Users,
-    title: "Team-ready",
-    description: "Consistent context for everyone.",
+    icon: Video,
+    title: "In the call already",
+    description: "Joins your Zoom or Meet and just listens.",
   },
 ] as const;
 
@@ -26,15 +27,23 @@ function Brand({ className = "" }: { className?: string }) {
   return (
     <Link
       href="/"
-      className={`inline-flex items-center gap-2.5 ${className}`}
+      className={`inline-flex items-center ${className}`}
       aria-label="Fly home"
     >
-      <span className="flex size-9 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-950/30">
-        <AudioLines className="size-5" aria-hidden="true" />
-      </span>
-      <span className="text-xl font-semibold tracking-[-0.04em]">
-        fly<span className="text-violet-500">.</span>
-      </span>
+      <Image
+        src="/logo_dark.svg"
+        alt="Fly"
+        width={199}
+        height={76}
+        className="h-8 w-auto dark:hidden"
+      />
+      <Image
+        src="/logo_light.svg"
+        alt="Fly"
+        width={183}
+        height={74}
+        className="hidden h-8 w-auto dark:block"
+      />
     </Link>
   );
 }
@@ -45,11 +54,11 @@ function LiveConversation() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200">
-            <Sparkles className="size-5" aria-hidden="true" />
+            <AudioLines className="size-5" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-sm font-medium text-white">Your Fly AI</p>
-            <p className="text-xs text-white/50">Go-to-market review</p>
+            <p className="text-sm font-medium text-white">Socratic Coach</p>
+            <p className="text-xs text-white/50">Ready-made agent · Gemini Realtime</p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
@@ -60,18 +69,18 @@ function LiveConversation() {
 
       <div className="mt-4 space-y-2.5">
         <div className="ml-auto max-w-[85%] rounded-2xl rounded-tr-md bg-violet-500 px-3.5 py-2.5 text-sm leading-relaxed text-white">
-          What should we prioritize for the next launch?
+          Don&apos;t tell me what to do. Question me until I&apos;m sure about this pricing.
         </div>
         <div className="max-w-[88%] rounded-2xl rounded-tl-md bg-white/10 px-3.5 py-2.5 text-sm leading-relaxed text-white/80">
-          Start with the customer workflow that removes the most friction. I found three supporting signals.
+          Fair. What happens to retention if you drop the annual discount?
         </div>
       </div>
 
       <div className="mt-4 flex items-center gap-3 text-xs text-white/55">
         <span className="flex size-7 items-center justify-center rounded-full bg-violet-500/20 text-violet-200">
-          <Sparkles className="size-3.5" aria-hidden="true" />
+          <Mic className="size-3.5" aria-hidden="true" />
         </span>
-        <span>Responding with your team&apos;s context</span>
+        <span>Speaking &mdash; streaming out loud</span>
         <div className="ml-auto flex h-6 items-center gap-1" aria-hidden="true">
           {waveform.map((height, index) => (
             <span
@@ -100,13 +109,13 @@ export default function SignUpPage() {
             <div className="my-auto py-4">
               <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1.5 text-xs font-medium text-violet-200">
                 <span className="size-1.5 animate-pulse rounded-full bg-violet-300" />
-                Realtime, personalized, always in the room
+                Live voice AI, in your meetings
               </div>
               <h1 className="mt-6 max-w-xl text-4xl leading-[1.05] font-semibold tracking-[-0.045em] text-balance xl:text-6xl">
-                Add a brilliant teammate to every conversation.
+                Join the call and just start talking.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-white/60 xl:text-lg">
-                Shape an AI with your expertise, your tone, and your context. Fly answers in the moment—not minutes later.
+                Fly streams a realtime voice model straight into your Zoom or Meet. Bring your own prompt or pick a ready-made AI agent&mdash;it listens, thinks, and answers out loud while the meeting is still happening.
               </p>
             </div>
 
@@ -139,13 +148,14 @@ export default function SignUpPage() {
             <div className="w-full max-w-md">
               <div className="mb-8 lg:hidden">
                 <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-                  Meet your AI teammate
+                  Talk to AI in real time
                 </p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-balance">
-                  Better meetings start with better context.
+                  Start talking in minutes.
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Create your workspace and bring a realtime custom AI into every conversation.
+                  Create your account, bring a prompt or a ready-made agent, and
+                  let it speak up in your next call.
                 </p>
               </div>
 
