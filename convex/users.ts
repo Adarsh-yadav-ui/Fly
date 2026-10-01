@@ -1,8 +1,9 @@
 import { createClerkClient } from "@clerk/backend";
 import { ConvexError } from "convex/values";
 import type { UserIdentity } from "convex/server";
-import { v, type Infer } from "convex/values";
+import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import {
   action,
   env,
@@ -15,33 +16,10 @@ import {
 const clerkUserData = v.object({
   clerkUserId: v.string(),
   email: v.string(),
-  firstName: v.string(),
-  lastName: v.string(),
-  username: v.string(),
-  imageUrl: v.string(),
-});
-
-type ClerkUserData = Infer<typeof clerkUserData>;
-
-export const getUsers = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("users").collect();
-  },
-});
-
-export const get = query({
-  args: { id: v.id("users") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
-  },
-});
-
-export const getRecentUsers = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("users").order("desc").take(5);
-  },
+  firstName: v.optional(v.string()),
+  lastName: v.optional(v.string()),
+  username: v.optional(v.string()),
+  imageUrl: v.optional(v.string()),
 });
 
 export const current = query({
@@ -57,16 +35,9 @@ export const upsertFromClerk = internalMutation({
     const user = await userByClerkUserId(ctx, data.clerkUserId);
 
     if (user === null) {
-      await ctx.db.insert("users", {
-        ...data,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
+      await ctx.db.insert("users", { ...data, updatedAt: Date.now() });
     } else {
-      await ctx.db.patch(user._id, {
-        ...data,
-        updatedAt: Date.now(),
-      });
+      await ctx.db.patch(user._id, { ...data, updatedAt: Date.now() });
     }
   },
 });
@@ -75,36 +46,61 @@ export const deleteFromClerk = internalMutation({
   args: { clerkUserId: v.string() },
   async handler(ctx, { clerkUserId }) {
     const user = await userByClerkUserId(ctx, clerkUserId);
-
-    if (user !== null) {
-      await ctx.db.delete(user._id);
+    if (user === null) {
+      return;
     }
+
+    await ctx.db.delete(user._id);
+
+    // A user can own more sessions, agents, and meetings than fit in a single
+    // transaction, so the remainder is swept in bounded batches.
+    await ctx.scheduler.runAfter(0, internal.users.purgeUserData, {
+      userId: user._id,
+    });
   },
 });
 
-export async function getCurrentUserOrThrow(ctx: QueryCtx) {
-  const userRecord = await getCurrentUser(ctx);
-  if (!userRecord) throw new Error("Can't get current user");
-  return userRecord;
-}
+const PURGE_BATCH_SIZE = 100;
 
-export async function getCurrentUser(ctx: QueryCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (identity === null) {
-    return null;
-  }
-  return await userByClerkUserId(ctx, identity.subject);
-}
+export const purgeUserData = internalMutation({
+  args: { userId: v.id("users") },
+  async handler(ctx, { userId }) {
+    const sessions = await ctx.db
+      .query("session")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .take(PURGE_BATCH_SIZE);
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+    }
+    if (sessions.length === PURGE_BATCH_SIZE) {
+      await ctx.scheduler.runAfter(0, internal.users.purgeUserData, { userId });
+      return;
+    }
 
-async function userByClerkUserId(
-  ctx: QueryCtx | MutationCtx,
-  clerkUserId: string,
-) {
-  return await ctx.db
-    .query("users")
-    .withIndex("byClerkUserId", (q) => q.eq("clerkUserId", clerkUserId))
-    .unique();
-}
+    const agents = await ctx.db
+      .query("agents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .take(PURGE_BATCH_SIZE);
+    for (const agent of agents) {
+      await ctx.db.delete(agent._id);
+    }
+    if (agents.length === PURGE_BATCH_SIZE) {
+      await ctx.scheduler.runAfter(0, internal.users.purgeUserData, { userId });
+      return;
+    }
+
+    const meetings = await ctx.db
+      .query("meetings")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .take(PURGE_BATCH_SIZE);
+    for (const meeting of meetings) {
+      await ctx.db.delete(meeting._id);
+    }
+    if (meetings.length === PURGE_BATCH_SIZE) {
+      await ctx.scheduler.runAfter(0, internal.users.purgeUserData, { userId });
+    }
+  },
+});
 
 /**
  * Clerk's session token for Convex only carries the user id, so the profile
@@ -170,7 +166,51 @@ export const sync = action({
   },
 });
 
-function dataFromIdentity(identity: UserIdentity): ClerkUserData {
+/**
+ * Resolves the caller's `users` document for functions that need it. The
+ * identity always comes from the token, never from a client argument.
+ * `users.current` is the exception: it is the bootstrap query and returns
+ * `null` for a signed-out caller rather than throwing.
+ */
+export async function requireUserId(
+  ctx: QueryCtx | MutationCtx,
+): Promise<Id<"users">> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (identity === null) {
+    throw new ConvexError({
+      code: "unauthenticated",
+      message: "Sign in first",
+    });
+  }
+  const user = await userByClerkUserId(ctx, identity.subject);
+  if (user === null) {
+    throw new ConvexError({
+      code: "profile_not_synced",
+      message: "Your profile is still syncing, try again in a moment",
+    });
+  }
+  return user._id;
+}
+
+export async function getCurrentUser(ctx: QueryCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (identity === null) {
+    return null;
+  }
+  return await userByClerkUserId(ctx, identity.subject);
+}
+
+async function userByClerkUserId(
+  ctx: QueryCtx | MutationCtx,
+  clerkUserId: string,
+) {
+  return await ctx.db
+    .query("users")
+    .withIndex("byClerkUserId", (q) => q.eq("clerkUserId", clerkUserId))
+    .unique();
+}
+
+function dataFromIdentity(identity: UserIdentity) {
   return {
     clerkUserId: identity.subject,
     email: identity.email ?? "",
